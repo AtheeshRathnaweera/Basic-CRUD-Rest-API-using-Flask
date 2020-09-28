@@ -1,65 +1,42 @@
+from datetime import datetime
+
 from flask import jsonify
+from base import Session
+from user import User
+from user_serializer import get_users_list_as_json, get_user_as_json
 
 
 class UserRepository:
-    users = [
-        {'id': 1,
-         'name': 'Atheesh Rathnaweera',
-         'email': 'rathnaweeraatheesh72@gmail.com'
-         },
-        {'id': 2,
-         'name': 'Buddhika Rathnaweera',
-         'email': 'buddhikarathnaweera@gmail.com'
-         },
-        {'id': 3,
-         'name': 'Danushi Karunarathne',
-         'email': 'danushi@gmail.com'
-         }
-    ]
+    session = Session()
 
     def get_all(self):
-        return jsonify(self.users)
+        all_books = self.session.query(User).all()
+        return jsonify(get_users_list_as_json(all_books))
 
     def get_by_id(self, user_id):
-        result = {}
-        for user in self.users:
-            if user["id"] == user_id:
-                result = jsonify(user)
-                break
-
-        return result
+        book = self.session.query(User).get(user_id)
+        return jsonify(get_user_as_json(book))
 
     def save(self, new_user):
-        result = None
+        new_user = User(new_user["name"], new_user["email"], datetime.now())
+        self.session.add(new_user)
+        self.session.commit()
 
-        for user in self.users:
-            if user["id"] == new_user["id"]:
-                return result
-
-        self.users.append(new_user)
-        result = jsonify(new_user)
-        return result
+        return jsonify(get_user_as_json(new_user))
 
     def update(self, user_id, new_user):
-        result = None
+        exist_user = self.session.query(User).filter(User.id == user_id).first()
+        exist_user.name = new_user["name"]
+        exist_user.email = new_user["email"]
+        self.session.commit()
 
-        for user in self.users:
-            if user["id"] == user_id:
-                print("user found")
-                user["name"] = new_user["name"]
-                user["email"] = new_user["email"]
-                result = jsonify(user)
-                break
-
-        return result
+        return jsonify(get_user_as_json(exist_user))
 
     def delete(self, user_id):
-        result = "delete failed"
+        result = self.session.query(User).filter(User.id == user_id).delete()
+        self.session.commit()
 
-        for user in self.users:
-            if user["id"] == user_id:
-                self.users.remove(user)
-                result = "delete success"
-                break
-
-        return result
+        if result == 0:
+            return False
+        else:
+            return True

@@ -25,8 +25,16 @@ class BooksRepository:
     def update(self, book_id, new_data):
         exist_book = self.session.query(Book).filter(Book.id == book_id).first()
         exist_book.name = new_data["name"]
-        # exist_book.update({'name': new_data["name"]}, synchronize_session=False)
         self.session.commit()
 
-        print("book id started " + str(exist_book))
         return jsonify(get_book_as_json(exist_book))
+
+    def delete(self, book_id):
+        result = self.session.query(Book).filter(Book.id == book_id).delete()
+        self.session.commit()
+
+        if result == 0:
+            return False
+        else:
+            return True
+

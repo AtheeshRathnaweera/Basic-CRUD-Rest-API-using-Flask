@@ -21,8 +21,7 @@ class BooksController(Resource):
 
     def post(self):
         new_book = self.book_req_valid_args.parse_args()
-        result = self.books_repository.save(new_book)
-        return result
+        return self.books_repository.save(new_book)
 
     def put(self):
         update_book_req_valid = self.book_req_valid_args.copy()
@@ -31,5 +30,13 @@ class BooksController(Resource):
         new_data = update_book_req_valid.parse_args()
 
         result = self.books_repository.update(new_data["id"], new_data)
-        print("update started")
         return result
+
+    def delete(self):
+        query_parameters = request.args
+        book_id = query_parameters.get('id')
+
+        if book_id:
+            return self.books_repository.delete(book_id)
+        else:
+            return False
